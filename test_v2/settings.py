@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-from test_v2.config_helpers.google_cloud_utils import obtener_credenciales_google, descargar_y_extraer_wallet
+from test_v2.google_cloud_utils import obtener_credenciales_google, descargar_y_extraer_wallet
 from google.cloud import storage
 
 # Cargar variables de entorno
