@@ -14,14 +14,23 @@ local_wallet_path = BASE_DIR / 'wallet'
 
 os.environ['TNS_ADMIN'] = str(local_wallet_path)
 
+# Determinar si estamos en el entorno de Render
+is_render = 'RENDER' in os.environ
 
-# Cargar las credenciales desde la ruta especificada en el archivo .env
-credentials_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
-if not credentials_path:
-    raise ValueError("La variable de entorno GOOGLE_APPLICATION_CREDENTIALS no está definida.")
-
-# Crear credenciales desde el archivo
-credentials = service_account.Credentials.from_service_account_file(credentials_path)
+if is_render:
+    # En Render usamos la variable de entorno que contiene el JSON de credenciales
+    credentials_json = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
+    if not credentials_json:
+        raise ValueError("La variable de entorno GOOGLE_APPLICATION_CREDENTIALS_JSON no está definida.")
+    # Crear las credenciales desde el JSON
+    credentials = service_account.Credentials.from_service_account_info(json.loads(credentials_json))
+else:
+    # En local usamos el archivo de credenciales
+    credentials_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+    if not credentials_path:
+        raise ValueError("La variable de entorno GOOGLE_APPLICATION_CREDENTIALS no está definida.")
+    # Crear credenciales desde el archivo
+    credentials = service_account.Credentials.from_service_account_file(credentials_path)
 
 # Crear el cliente de Google Cloud Storage usando las credenciales
 storage_client = storage.Client(credentials=credentials)
@@ -32,12 +41,11 @@ flag_file = local_wallet_path / 'download_complete.flag'  # Archivo de bandera p
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', default='hasdjdashjshajdhjshajdshdj')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = 'RENDER' not in os.environ
+DEBUG = not is_render
 
 ALLOWED_HOSTS = ['*']
 
@@ -173,7 +181,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-if not DEBUG:
+if is_render:
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
