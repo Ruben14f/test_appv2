@@ -1,8 +1,6 @@
 .env
 venv/
 db.sqlite3
-
 __pycache__/
-
 config/credencialescloud.json
 wallet/
